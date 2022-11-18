@@ -18,7 +18,7 @@ long double x_offset = -2.20;
 long double y_range = 2.50;
 long double y_offset = -1.25;
 
-long double zoom_amount = 0.9;
+long double zoom_amount = 0.5;
 
 std::vector<sf::Color> mandelbrot_colors()
 {
@@ -28,11 +28,11 @@ std::vector<sf::Color> mandelbrot_colors()
 	sf::Color color2(70, 190, 190);
 	sf::Color color3(160, 130, 220);
 
-	for (int i = 0; i < max_iterations; i++)
+	for (int i = 0; i <= 100; i++)
 	{
 		sf::Color start_color;
 		sf::Color end_color;
-		long double lerp_value = double(i) / double(max_iterations);
+		long double lerp_value = double(i) / 100;
 		if (lerp_value < 0.5)
 		{
 			start_color = color1;
@@ -50,16 +50,44 @@ std::vector<sf::Color> mandelbrot_colors()
 
 		colors.push_back(sf::Color::Color(red, green, blue));
 
-		//colors.push_back(sf::Color::Color(round((255 * i) / max_iterations), round((255 * i) / max_iterations), 255));
 	}
 
 	return colors;
+}
+
+sf::Color get_color(double lerp_value)
+{
+	sf::Color color1(35, 20, 65);
+	sf::Color color2(70, 190, 190);
+	sf::Color color3(160, 130, 220);
+
+	sf::Color start_color;
+	sf::Color end_color;
+
+	if (lerp_value < 0.5)
+	{
+		start_color = color1;
+		end_color = color2;
+	}
+	else
+	{
+		start_color = color2;
+		end_color = color3;
+	}
+
+	int red = round(std::lerp(start_color.r, end_color.r, lerp_value));
+	int green = round(std::lerp(start_color.g, end_color.g, lerp_value));
+	int blue = round(std::lerp(start_color.b, end_color.b, lerp_value));
+
+	return sf::Color::Color(red, green, blue);
 }
 
 sf::Image mandelbrot(std::vector<sf::Color> colors)
 {
 	sf::Image image;
 	image.create(screen_x, screen_y, sf::Color::Black);
+
+	std::vector<std::vector<int>> iteration_counts(screen_x, std::vector<int>(screen_y, 0));
 
 	for (int pixel_x = 0; pixel_x < screen_x; pixel_x++)
 	{
@@ -74,7 +102,6 @@ sf::Image mandelbrot(std::vector<sf::Color> colors)
 			long double y = 0.0;
 
 			int iterations = 0;
-			
 
 			while (((x * x) + (y * y)) < 4 && iterations < max_iterations)
 			{
@@ -85,9 +112,41 @@ sf::Image mandelbrot(std::vector<sf::Color> colors)
 				iterations++;
 			}
 
-			if (iterations < max_iterations)
+			iteration_counts[pixel_x][pixel_y] = iterations;
+		}
+	}
+
+	std::vector<int> iterations_per_pixel(max_iterations + 1, 0);
+
+	for (int x = 0; x < screen_x; x++)
+	{
+		for (int y = 0; y < screen_y; y++)
+		{
+			int i = iteration_counts[x][y];
+			iterations_per_pixel[i]++;
+		}
+	}
+
+	int total = 0;
+	for (int i = 0; i < max_iterations; i++)
+	{
+		total += iterations_per_pixel[i];
+	}
+
+	for (int x = 0; x < screen_x; x++)
+	{
+		for (int y = 0; y < screen_y; y++)
+		{
+			int iteration;
+			iteration = iteration_counts[x][y];
+			for (int i = 0; i <= iteration; i++)
 			{
-				image.setPixel(pixel_x, pixel_y, colors[iterations]);
+				if (iteration_counts[x][y] < max_iterations)
+				{
+					double value = (double(iterations_per_pixel[i])) / total;
+					//std::cout << round(value * 100) << "\n";
+					image.setPixel(x, y, colors[round(value * 100)]);
+				}
 			}
 		}
 	}
