@@ -1,7 +1,5 @@
 # Mandelbrot
 
-Rendering the mandelbrot set with c++ and sfml, just learning things for no reason
-
 
 
 https://user-images.githubusercontent.com/55559142/201756001-c5611eb2-cb91-42ef-8dac-47843c6b48a9.mp4
